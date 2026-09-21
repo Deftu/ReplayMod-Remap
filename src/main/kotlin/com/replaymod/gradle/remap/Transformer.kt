@@ -82,15 +82,7 @@ class Transformer(private val map: MappingSet) {
             // Our PsiMapper only works with the PSI tree elements, not with the faster (but kotlin-specific) classes
             config.put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
 
-            // Mark Registry as loaded, otherwise RegistryKey will (provided a sufficiently complex project) log
-            // messages about it being accessed before it is loaded (and it won't ever be loaded naturally).
-            val loadedField = try {
-                Registry::class.java.getDeclaredField("myLoaded")
-            } catch (_: NoSuchFieldException) {
-                Registry::class.java.getDeclaredField("isLoaded")
-            }
-            loadedField.isAccessible = true
-            loadedField.set(Registry.getInstance(), true)
+            markRegistryLoaded()
 
             val environment = KotlinCoreEnvironment.createForProduction(
                     disposable,
@@ -244,4 +236,28 @@ class Transformer(private val map: MappingSet) {
         }
     }
 
+}
+
+// Mark Registry as loaded, otherwise RegistryKey will (provided a sufficiently complex project) log messages about it
+// being accessed before it is loaded (and it won't ever be loaded naturally).
+// This is purely cosmetic and relies on compiler internals which differ between versions (e.g. `Registry.getInstance()`
+// no longer exists in Kotlin 2.4), so it is done reflectively and any failure is ignored.
+private fun markRegistryLoaded() {
+    try {
+        val registryClass = Registry::class.java
+        val instance = try {
+            registryClass.getMethod("getInstance").invoke(null)
+        } catch (_: NoSuchMethodException) {
+            registryClass.getDeclaredField("registry").apply { isAccessible = true }.get(null)
+        }
+        val loadedField = try {
+            registryClass.getDeclaredField("myLoaded")
+        } catch (_: NoSuchFieldException) {
+            registryClass.getDeclaredField("isLoaded")
+        }
+        loadedField.isAccessible = true
+        loadedField.set(instance, true)
+    } catch (_: ReflectiveOperationException) {
+    } catch (_: RuntimeException) {
+    }
 }
