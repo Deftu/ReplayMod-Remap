@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 public class A extends AParent implements AInterface {
     private A a;
+    public A aPub;
     private int aField;
 
     public A() {
@@ -14,6 +15,7 @@ public class A extends AParent implements AInterface {
     }
 
     public static A create() { return new A(); }
+    public static A createA() { return new A(); }
 
     public void aMethod() {
         aInterfaceMethod();
@@ -98,8 +100,32 @@ public class A extends AParent implements AInterface {
 
     @Override
     public void aInterfaceMethod() {
-        new A() {};
+        A aLocal = getA();
+        new A() {
+            private int aAnonField;
+
+            @Override
+            public A getA() {
+                return aLocal;
+            }
+        };
     }
+
+    @Override
+    public A aSpecializableMethod() {
+        return this;
+    }
+
+    @Override
+    public A aSpecializableMethodWithChangingSignature() {
+        return this;
+    }
+
+    public static A aStaticOverload() { return create(); }
+    public static A aStaticOverload(int i) { return create(); }
+
+    public static A aAmbiguousMethod() { return create(); }
+    public static A aAmbiguousMethod(int i) { return create(); }
 
     public static void supplier(Supplier<String> supplier) {
     }
@@ -111,8 +137,10 @@ public class A extends AParent implements AInterface {
         private int aField;
     }
 
-    public class InnerA {
+    public class InnerA extends A {
     }
 
-    public class GenericA<T> {}
+    public class GenericA<T> {
+        public void aMethod(T t) {}
+    }
 }

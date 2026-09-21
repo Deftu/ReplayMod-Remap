@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version("2.0.0")
+    kotlin("jvm") version("2.3.0")
     val dgtVersion = "2.5.0"
     id("dev.deftu.gradle.tools") version(dgtVersion)
     id("dev.deftu.gradle.tools.publishing.maven") version(dgtVersion)
@@ -25,6 +25,7 @@ kotlinVersion("2.0.0")
 dependencies {
     api("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.5.21")
     implementation(kotlin("stdlib"))
+    implementation("org.ow2.asm:asm-tree:9.9.1")
     api("org.cadixdev:lorenz:0.5.8")
     runtimeOnly("net.java.dev.jna:jna:5.10.0") // don't strictly need this but IDEA spams log without
 
@@ -37,10 +38,10 @@ dependencies {
 }
 
 tasks {
-    withType<KotlinCompile> {
+    named<KotlinCompile>("compileKotlin") {
         compilerOptions {
-            apiVersion.set(KotlinVersion.KOTLIN_1_8)
-            apiVersion.set(KotlinVersion.KOTLIN_1_8)
+            apiVersion.set(KotlinVersion.KOTLIN_1_9)
+            languageVersion.set(KotlinVersion.KOTLIN_1_9)
         }
     }
 
