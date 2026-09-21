@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version("2.3.0")
-    val dgtVersion = "2.5.0"
+    val dgtVersion = "2.80.0"
     id("dev.deftu.gradle.tools") version(dgtVersion)
     id("dev.deftu.gradle.tools.publishing.maven") version(dgtVersion)
 }
@@ -32,12 +32,17 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
     testImplementation("io.kotest:kotest-assertions-core:4.6.3")
 
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly(testA.output)
     testRuntimeOnly(testB.output)
     testRuntimeOnly("org.spongepowered:mixin:0.8.4")
 }
 
 tasks {
+    withType<JavaCompile>().configureEach {
+        javaCompiler.set(project.javaToolchains.compilerFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    }
+
     named<KotlinCompile>("compileKotlin") {
         compilerOptions {
             apiVersion.set(KotlinVersion.KOTLIN_1_9)
@@ -45,8 +50,9 @@ tasks {
         }
     }
 
-    test {
+    withType<Test>().configureEach {
         useJUnitPlatform()
+        javaLauncher.set(project.javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
     }
 }
 
@@ -71,7 +77,6 @@ fun kotlinVersion(version: String, isPrimaryVersion: Boolean = false) {
 
     if (!isPrimaryVersion) {
         val testTask = tasks.register("testKotlin$name", Test::class) {
-            useJUnitPlatform()
             testClassesDirs = sourceSets.test.get().output.classesDirs
             classpath = testClasspath + sourceSets.test.get().output + sourceSets.main.get().output
         }

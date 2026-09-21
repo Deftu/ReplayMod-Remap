@@ -415,7 +415,7 @@ internal class PsiMapper(
         val fqName = resolved.fqName ?: return
         val classes = generateSequence(resolved) { it.getParentOfType<KtClassOrObject>(true) }.toMutableList()
         classes.reverse()
-        val dollarName = resolved.containingKtFile.packageFqName.child(classes.removeFirst().nameAsName!!).asString() +
+        val dollarName = resolved.containingKtFile.packageFqName.child(classes.removeAt(0).nameAsName!!).asString() +
             classes.joinToString("") { '$' + it.name!! }
         map(expr, fqName.asString(), dollarName)
     }
